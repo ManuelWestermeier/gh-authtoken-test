@@ -10,7 +10,12 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 app.use(cors());
 
 app.get("/github/login", (req, res) => {
-  const redirect_uri = "http://localhost:3000/github/callback";
+  const redirect_uri = new URL(
+    "https://gh-authtoken-test.onrender.com/github/callback"
+  );
+
+  redirect_uri.searchParams.set("appUrl", req.query.appUrl || "null");
+
   res.redirect(
     `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect_uri}&scope=repo`
   );
@@ -33,7 +38,11 @@ app.get("/github/callback", async (req, res) => {
 
     const accessToken = response.data.access_token;
 
-    res.redirect(`http://localhost:5173/?github_token=${accessToken}`);
+    const url = new URL(appUrl);
+
+    url.searchParams.set("token", accessToken);
+
+    res.redirect(url);
   } catch (err) {
     console.error(err);
     res.status(500).send("OAuth failed");
